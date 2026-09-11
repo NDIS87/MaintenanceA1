@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Bảo Trì A1</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrapcss/bootstrap.min.css
+
+    <style>
+
+        body{
+            background:#f4f6f9;
+            padding-bottom:80px;
+        }
+
+        .header{
+            background:#0d6efd;
+            color:white;
+            padding:15px;
+            border-radius:0 0 20px 20px;
+        }
+
+        .stat-card{
+            border-radius:15px;
+            padding:15px;
+            color:white;
+            text-align:center;
+        }
+
+        .blue{
+            background:#0d6efd;
+        }
+
+        .yellow{
+            background:#ffc107;
+            color:black;
+        }
+
+        .red{
+            background:#dc3545;
+        }
+
+        .job-card{
+            background:white;
+            border-radius:15px;
+            padding:15px;
+            margin-top:10px;
+            box-shadow:0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .status{
+            font-weight:bold;
+        }
+
+        .doing{
+            color:#0d6efd;
+        }
+
+        .waiting{
+            color:#ffc107;
+        }
+
+        .overdue{
+            color:#dc3545;
+        }
+
+        .bottom-nav{
+            position:fixed;
+            bottom:0;
+            left:0;
+            right:0;
+            background:white;
+            border-top:1px solid #ddd;
+            padding:8px;
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="header">
+
+    <h3>📋 Bảo Trì A1</h3>
+
+    <small>
+        Theo dõi công việc bảo trì
+    </small>
+
+</div>
+
+<div class="container mt-3">
+
+    <input
+        type="text"
+        id="search"
+        class="form-control"
+        placeholder="🔍 Tìm công việc..."
+        onkeyup="renderJobs()"
+    >
+
+    <div class="row mt-3">
+
+        <div class="col-4">
+
+            <div class="stat-card blue">
+
+                <h5 id="totalOpen">0</h5>
+                <small>Đang mở</small>
+
+            </div>
+
+        </div>
+
+        <div class="col-4">
+
+            <div class="stat-card yellow">
+
+                <h5 id="waitingCount">0</h5>
+                <small>Chờ VT</small>
+
+            </div>
+
+        </div>
+
+        <div class="col-4">
+
+            <div class="stat-card red">
+
+                <h5 id="overdueCount">0</h5>
+                <small>Quá hạn</small>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="jobList"></div>
+
+</div>
+
+<div class="bottom-nav text-center">
+
+    📋 Việc cần làm
+
+</div>
+
+<
