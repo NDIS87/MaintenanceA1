@@ -1,153 +1,759 @@
+
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Theo dõi Bảo trì</title>
+<meta name="theme-color" content="#0F4C5C">
 
-    <title>Bảo Trì A1</title>
+<!-- Bootstrap 5 -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<!-- Bootstrap Icons -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+<!-- Font: Be Vietnam Pro (hỗ trợ dấu tiếng Việt tốt, cá tính riêng) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrapcss/bootstrap.min.css
+<style>
+:root{
+  --bg:#F3F5F7;
+  --surface:#FFFFFF;
+  --ink:#1C2430;
+  --ink-soft:#5B6472;
+  --line:#E3E7EB;
+  --brand:#0F4C5C;
+  --brand-ink:#0B3946;
+  --brand-soft:#E4EEF0;
 
-    <style>
+  --done:#2F9E44;      --done-bg:#E7F7EA;
+  --progress:#1971C2;  --progress-bg:#E8F1FB;
+  --waiting:#E8A400;   --waiting-bg:#FFF6DF;
+  --overdue:#E03131;   --overdue-bg:#FDEAEA;
 
-        body{
-            background:#f4f6f9;
-            padding-bottom:80px;
-        }
+  --radius-lg:18px;
+  --radius-md:12px;
+  --radius-sm:8px;
+  --nav-h:64px;
+}
 
-        .header{
-            background:#0d6efd;
-            color:white;
-            padding:15px;
-            border-radius:0 0 20px 20px;
-        }
+*{ -webkit-tap-highlight-color: transparent; }
 
-        .stat-card{
-            border-radius:15px;
-            padding:15px;
-            color:white;
-            text-align:center;
-        }
+html,body{
+  background:var(--bg);
+  color:var(--ink);
+  font-family:'Be Vietnam Pro', system-ui, sans-serif;
+  min-height:100vh;
+}
 
-        .blue{
-            background:#0d6efd;
-        }
+h1,h2,h3,h4,h5,.display-num{ font-family:'Be Vietnam Pro', sans-serif; font-weight:700; letter-spacing:-0.01em; }
 
-        .yellow{
-            background:#ffc107;
-            color:black;
-        }
+/* ---------- App shell ---------- */
+.app-header{
+  position:sticky; top:0; z-index:1030;
+  background:var(--brand);
+  color:#fff;
+  padding: env(safe-area-inset-top) 0 0 0;
+}
+.app-header .inner{
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 16px;
+}
+.app-header .brand-title{
+  font-weight:800; font-size:1.15rem; margin:0; display:flex; align-items:center; gap:8px;
+}
+.app-header .brand-title .dot{
+  width:9px;height:9px;border-radius:50%;background:#7CE0B8;
+  box-shadow:0 0 0 3px rgba(124,224,184,.25);
+}
+.sync-btn{
+  background:rgba(255,255,255,.12); border:none; color:#fff;
+  width:38px;height:38px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .5s ease;
+}
+.sync-btn.spinning i{ animation: spin .8s linear infinite; }
+@keyframes spin{ to{ transform:rotate(360deg); } }
+.sync-meta{ font-size:.72rem; color:rgba(255,255,255,.75); padding:0 16px 10px; }
 
-        .red{
-            background:#dc3545;
-        }
+main{ padding-bottom: calc(var(--nav-h) + 22px); }
+.screen{ display:none; animation: fadeIn .25s ease; }
+.screen.active{ display:block; }
+@keyframes fadeIn{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);} }
 
-        .job-card{
-            background:white;
-            border-radius:15px;
-            padding:15px;
-            margin-top:10px;
-            box-shadow:0 2px 5px rgba(0,0,0,0.1);
-        }
+/* ---------- Bottom nav ---------- */
+.bottom-nav{
+  position:fixed; left:0; right:0; bottom:0; z-index:1040;
+  height:var(--nav-h);
+  background:var(--surface);
+  border-top:1px solid var(--line);
+  display:flex;
+  padding-bottom: env(safe-area-inset-bottom);
+  box-shadow:0 -4px 18px rgba(15,76,92,.06);
+}
+.nav-btn{
+  flex:1; border:none; background:none;
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  color:var(--ink-soft); font-size:.68rem; font-weight:600; position:relative;
+}
+.nav-btn i{ font-size:1.28rem; }
+.nav-btn.active{ color:var(--brand); }
+.nav-btn .badge-count{
+  position:absolute; top:2px; right:calc(50% - 20px);
+  background:var(--overdue); color:#fff; font-size:.6rem; font-weight:700;
+  border-radius:20px; min-width:16px; height:16px; padding:0 4px;
+  display:flex; align-items:center; justify-content:center;
+}
 
-        .status{
-            font-weight:bold;
-        }
+/* ---------- KPI strip (màn Việc cần làm) ---------- */
+.kpi-scroll{
+  display:flex; gap:10px; overflow-x:auto; padding:14px 16px 4px;
+  scrollbar-width:none;
+}
+.kpi-scroll::-webkit-scrollbar{ display:none; }
+.kpi-chip{
+  flex:0 0 auto; min-width:128px;
+  background:var(--surface); border-radius:var(--radius-md);
+  padding:12px 14px; border:1px solid var(--line);
+}
+.kpi-chip .num{ font-size:1.5rem; font-weight:800; line-height:1; }
+.kpi-chip .lbl{ font-size:.72rem; color:var(--ink-soft); margin-top:4px; font-weight:600; }
+.kpi-chip.k-total{ border-left:4px solid var(--brand); }
+.kpi-chip.k-overdue{ border-left:4px solid var(--overdue); }
+.kpi-chip.k-overdue .num{ color:var(--overdue); }
+.kpi-chip.k-waiting{ border-left:4px solid var(--waiting); }
+.kpi-chip.k-waiting .num{ color:#B57A00; }
+.kpi-chip.k-progress{ border-left:4px solid var(--progress); }
+.kpi-chip.k-progress .num{ color:var(--progress); }
 
-        .doing{
-            color:#0d6efd;
-        }
+/* ---------- Filter bar ---------- */
+.filter-bar{ padding:10px 16px; }
+.search-box{
+  position:relative;
+}
+.search-box i{
+  position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--ink-soft);
+}
+.search-box input{
+  border-radius:var(--radius-md); border:1px solid var(--line); background:var(--surface);
+  padding:10px 12px 10px 38px; width:100%; font-size:.9rem;
+}
+.search-box input:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-soft); }
 
-        .waiting{
-            color:#ffc107;
-        }
+.filter-row{ display:flex; gap:8px; margin-top:8px; overflow-x:auto; scrollbar-width:none; }
+.filter-row::-webkit-scrollbar{ display:none; }
+.filter-select{
+  border-radius:20px; border:1px solid var(--line); background:var(--surface);
+  font-size:.8rem; padding:7px 12px; color:var(--ink); flex:0 0 auto;
+}
+.chip-toggle{
+  border:1px solid var(--line); background:var(--surface); border-radius:20px;
+  font-size:.78rem; font-weight:600; padding:6px 13px; white-space:nowrap; color:var(--ink-soft);
+}
+.chip-toggle.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
 
-        .overdue{
-            color:#dc3545;
-        }
+/* ---------- Job cards ---------- */
+.card-list{ padding:6px 16px 8px; display:flex; flex-direction:column; gap:10px; }
+.job-card{
+  background:var(--surface); border-radius:var(--radius-lg);
+  border:1px solid var(--line); border-left-width:5px;
+  padding:14px 14px 12px;
+}
+.job-card.st-done{ border-left-color:var(--done); }
+.job-card.st-progress{ border-left-color:var(--progress); }
+.job-card.st-waiting{ border-left-color:var(--waiting); }
+.job-card.st-overdue{ border-left-color:var(--overdue); }
 
-        .bottom-nav{
-            position:fixed;
-            bottom:0;
-            left:0;
-            right:0;
-            background:white;
-            border-top:1px solid #ddd;
-            padding:8px;
-        }
+.job-card .top-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px; }
+.job-card .title{ font-weight:700; font-size:.95rem; line-height:1.35; }
+.status-pill{
+  font-size:.68rem; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap;
+}
+.status-pill.st-done{ background:var(--done-bg); color:var(--done); }
+.status-pill.st-progress{ background:var(--progress-bg); color:var(--progress); }
+.status-pill.st-waiting{ background:var(--waiting-bg); color:#8A6100; }
+.status-pill.st-overdue{ background:var(--overdue-bg); color:var(--overdue); }
 
-    </style>
+.job-card .meta-line{
+  display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:9px; font-size:.78rem; color:var(--ink-soft);
+}
+.job-card .meta-line span{ display:flex; align-items:center; gap:5px; }
+.job-card .meta-line i{ font-size:.85rem; }
+.job-card .foot-row{
+  display:flex; justify-content:space-between; align-items:center; margin-top:10px;
+  padding-top:9px; border-top:1px dashed var(--line);
+}
+.dept-tag{
+  background:var(--brand-soft); color:var(--brand-ink); font-size:.7rem; font-weight:700;
+  padding:3px 9px; border-radius:8px;
+}
+.days-tag{ font-size:.72rem; font-weight:700; }
+.days-tag.overdue{ color:var(--overdue); }
+.days-tag.normal{ color:var(--ink-soft); }
 
+.empty-state{
+  text-align:center; padding:56px 20px; color:var(--ink-soft);
+}
+.empty-state i{ font-size:2.4rem; color:var(--line); }
+
+/* ---------- Report screen ---------- */
+.section-title{
+  padding:16px 16px 6px; font-size:.98rem; font-weight:800;
+}
+.kpi-grid{ display:grid; grid-template-columns:repeat(2,1fr); gap:10px; padding:6px 16px; }
+.kpi-box{
+  background:var(--surface); border-radius:var(--radius-md); border:1px solid var(--line);
+  padding:14px;
+}
+.kpi-box .num{ font-size:1.55rem; font-weight:800; }
+.kpi-box .lbl{ font-size:.75rem; color:var(--ink-soft); font-weight:600; margin-top:2px;}
+.chart-card{
+  background:var(--surface); border-radius:var(--radius-lg); border:1px solid var(--line);
+  padding:14px; margin:10px 16px;
+}
+.chart-card h6{ font-weight:700; font-size:.85rem; margin-bottom:10px; }
+.chart-wrap{ position:relative; height:220px; }
+
+.top-list{ padding:0 16px; }
+.top-item{
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:11px 13px; margin-bottom:8px;
+}
+.top-item .rank{
+  width:26px;height:26px;border-radius:50%;background:var(--overdue-bg);color:var(--overdue);
+  font-weight:800; font-size:.78rem; display:flex; align-items:center; justify-content:center; flex:0 0 auto;
+}
+.top-item .info{ flex:1; min-width:0; }
+.top-item .info .t{ font-size:.85rem; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.top-item .info .d{ font-size:.72rem; color:var(--ink-soft); }
+.top-item .days{ font-weight:800; color:var(--overdue); font-size:.85rem; white-space:nowrap; }
+
+/* ---------- History screen (timeline) ---------- */
+.timeline{ padding:6px 16px 8px; position:relative; }
+.timeline::before{
+  content:''; position:absolute; left:26px; top:8px; bottom:8px; width:2px; background:var(--line);
+}
+.tl-item{ display:flex; gap:12px; position:relative; padding:10px 0; }
+.tl-dot{
+  width:14px;height:14px;border-radius:50%;background:var(--done); border:3px solid var(--done-bg);
+  margin-top:4px; flex:0 0 auto; z-index:1;
+}
+.tl-content{
+  flex:1; background:var(--surface); border:1px solid var(--line); border-radius:var(--radius-md);
+  padding:11px 13px;
+}
+.tl-content .t{ font-weight:700; font-size:.88rem; }
+.tl-content .meta{ font-size:.75rem; color:var(--ink-soft); margin-top:4px; display:flex; flex-wrap:wrap; gap:4px 12px; }
+
+.loading-wrap{ text-align:center; padding:60px 20px; color:var(--ink-soft); }
+.offline-banner{
+  background:var(--waiting-bg); color:#8A6100; font-size:.78rem; font-weight:600;
+  padding:8px 16px; display:none;
+}
+.offline-banner.show{ display:block; }
+
+@media (min-width:768px){
+  main{ max-width:900px; margin:0 auto; }
+  .app-header .inner, .sync-meta{ max-width:900px; margin:0 auto; padding-left:24px; padding-right:24px; }
+  .kpi-grid{ grid-template-columns:repeat(4,1fr); }
+  .card-list{ display:grid; grid-template-columns:repeat(2,1fr); }
+}
+@media (min-width:1100px){
+  main, .app-header .inner, .sync-meta{ max-width:1100px; }
+  .card-list{ grid-template-columns:repeat(3,1fr); }
+  .bottom-nav{ display:none; }
+  .top-tabs{ display:flex !important; }
+}
+.top-tabs{ display:none; gap:6px; padding:0 24px 12px; }
+.top-tabs button{
+  background:rgba(255,255,255,.12); border:none; color:rgba(255,255,255,.8);
+  padding:8px 16px; border-radius:20px; font-size:.85rem; font-weight:700;
+}
+.top-tabs button.active{ background:#fff; color:var(--brand); }
+</style>
 </head>
-
 <body>
 
-<div class="header">
+<header class="app-header">
+  <div class="inner">
+    <p class="brand-title"><span class="dot"></span>Theo dõi Bảo trì</p>
+    <button class="sync-btn" id="btnSync" title="Đồng bộ lại"><i class="bi bi-arrow-repeat"></i></button>
+  </div>
+  <div class="top-tabs" id="topTabs">
+    <button data-tab="todo" class="active">Việc cần làm</button>
+    <button data-tab="report">Báo cáo</button>
+    <button data-tab="history">Lịch sử</button>
+  </div>
+  <div class="sync-meta" id="syncMeta">Đang tải dữ liệu...</div>
+</header>
 
-    <h3>📋 Bảo Trì A1</h3>
-
-    <small>
-        Theo dõi công việc bảo trì
-    </small>
-
+<div class="offline-banner" id="offlineBanner">
+  <i class="bi bi-wifi-off"></i> Không kết nối được API. Đang hiển thị dữ liệu đã lưu gần nhất.
 </div>
 
-<div class="container mt-3">
+<main>
 
-    <input
-        type="text"
-        id="search"
-        class="form-control"
-        placeholder="🔍 Tìm công việc..."
-        onkeyup="renderJobs()"
-    >
+  <!-- ============ SCREEN 1: VIỆC CẦN LÀM ============ -->
+  <section class="screen active" id="screen-todo">
+    <div class="kpi-scroll" id="kpiStrip"></div>
 
-    <div class="row mt-3">
-
-        <div class="col-4">
-
-            <div class="stat-card blue">
-
-                <h5 id="totalOpen">0</h5>
-                <small>Đang mở</small>
-
-            </div>
-
-        </div>
-
-        <div class="col-4">
-
-            <div class="stat-card yellow">
-
-                <h5 id="waitingCount">0</h5>
-                <small>Chờ VT</small>
-
-            </div>
-
-        </div>
-
-        <div class="col-4">
-
-            <div class="stat-card red">
-
-                <h5 id="overdueCount">0</h5>
-                <small>Quá hạn</small>
-
-            </div>
-
-        </div>
-
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchTodo" placeholder="Tìm công việc, người yêu cầu...">
+      </div>
+      <div class="filter-row" id="statusFilterRow">
+        <button class="chip-toggle active" data-status="all">Tất cả</button>
+        <button class="chip-toggle" data-status="overdue">Quá hạn</button>
+        <button class="chip-toggle" data-status="waiting">Chờ vật tư</button>
+        <button class="chip-toggle" data-status="progress">Đang làm</button>
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="deptFilterTodo">
+          <option value="all">Tất cả bộ phận</option>
+        </select>
+        <select class="filter-select" id="sortTodo">
+          <option value="days_desc">Tồn lâu nhất</option>
+          <option value="due_asc">Hạn gần nhất</option>
+          <option value="new_first">Mới phát sinh</option>
+        </select>
+      </div>
     </div>
 
-    <div id="jobList"></div>
+    <div class="card-list" id="todoList"></div>
+  </section>
 
-</div>
+  <!-- ============ SCREEN 2: BÁO CÁO ============ -->
+  <section class="screen" id="screen-report">
+    <div class="section-title">Tổng quan</div>
+    <div class="kpi-grid" id="reportKpi"></div>
 
-<div class="bottom-nav text-center">
+    <div class="chart-card">
+      <h6>Tỷ lệ theo trạng thái</h6>
+      <div class="chart-wrap"><canvas id="chartStatus"></canvas></div>
+    </div>
 
-    📋 Việc cần làm
+    <div class="chart-card">
+      <h6>Số lượng công việc theo bộ phận</h6>
+      <div class="chart-wrap"><canvas id="chartDept"></canvas></div>
+    </div>
 
-</div>
+    <div class="section-title">Top công việc tồn lâu</div>
+    <div class="top-list" id="topOverdueList"></div>
+  </section>
 
-<
+  <!-- ============ SCREEN 3: LỊCH SỬ ============ -->
+  <section class="screen" id="screen-history">
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" id="searchHistory" placeholder="Tìm trong lịch sử...">
+      </div>
+      <div class="filter-row">
+        <select class="filter-select" id="deptFilterHistory">
+          <option value="all">Tất cả bộ phận</option>
+        </select>
+        <select class="filter-select" id="sortHistory">
+          <option value="recent">Hoàn thành gần nhất</option>
+          <option value="oldest">Hoàn thành lâu nhất</option>
+        </select>
+      </div>
+    </div>
+    <div class="timeline" id="historyList"></div>
+  </section>
+
+</main>
+
+<nav class="bottom-nav" id="bottomNav">
+  <button class="nav-btn active" data-tab="todo">
+    <i class="bi bi-list-check"></i>
+    <span>Việc cần làm</span>
+    <span class="badge-count" id="badgeTodo" style="display:none;"></span>
+  </button>
+  <button class="nav-btn" data-tab="report">
+    <i class="bi bi-bar-chart-line"></i>
+    <span>Báo cáo</span>
+  </button>
+  <button class="nav-btn" data-tab="history">
+    <i class="bi bi-clock-history"></i>
+    <span>Lịch sử</span>
+  </button>
+</nav>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script>
+/* ============================================================
+   CẤU HÌNH
+   Dán URL Web App (kết thúc bằng /exec) của Google Apps Script
+   sau khi Deploy > New deployment > Web app.
+   ============================================================ */
+const CONFIG = {
+  API_URL: 'https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec',
+  REFRESH_MS: 5 * 60 * 1000,     // tự đồng bộ mỗi 5 phút
+  STORAGE_KEY: 'maint_tracker_cache_v1'
+};
+
+let STATE = { items: [], lastSync: null };
+let charts = {};
+
+/* ------------------ FETCH & NORMALIZE ------------------ */
+async function fetchData(showSpinner){
+  const btn = document.getElementById('btnSync');
+  if(showSpinner) btn.classList.add('spinning');
+  try{
+    const res = await fetch(CONFIG.API_URL, { cache: 'no-store' });
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error || 'API lỗi');
+    STATE.items = json.items.map(normalizeItem);
+    STATE.lastSync = new Date();
+    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({ items: json.items, ts: STATE.lastSync.toISOString() }));
+    setOffline(false);
+  }catch(err){
+    console.error(err);
+    const cached = localStorage.getItem(CONFIG.STORAGE_KEY);
+    if(cached){
+      const parsed = JSON.parse(cached);
+      STATE.items = parsed.items.map(normalizeItem);
+      STATE.lastSync = new Date(parsed.ts);
+    }
+    setOffline(true);
+  }
+  if(showSpinner) setTimeout(()=>btn.classList.remove('spinning'), 400);
+  populateDeptFilters();
+  renderAll();
+  updateSyncMeta();
+}
+
+function setOffline(isOffline){
+  document.getElementById('offlineBanner').classList.toggle('show', isOffline);
+}
+
+function updateSyncMeta(){
+  const el = document.getElementById('syncMeta');
+  if(!STATE.lastSync){ el.textContent = 'Chưa có dữ liệu'; return; }
+  el.textContent = 'Đồng bộ lúc ' + STATE.lastSync.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'}) +
+    ' · ' + STATE.items.length + ' công việc';
+}
+
+function parseDate(str){
+  if(!str) return null;
+  const d = new Date(str);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+function daysBetween(a, b){
+  return Math.round((a - b) / (1000*60*60*24));
+}
+
+/**
+ * Chuẩn hoá 1 dòng dữ liệu từ Sheet -> object có sẵn statusKey, statusLabel, số ngày tồn đọng...
+ * Ưu tiên trạng thái: Done > Quá hạn > Chờ vật tư > Đang làm
+ */
+function normalizeItem(raw){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ngayPhatSinh = parseDate(raw.NgayPhatSinh);
+  const hanHoanThanh = parseDate(raw.NgayYeuCauHoanThanh);
+  const tinhTrangCV = (raw.TinhTrangCV || '').trim();
+  const tinhTrangVatTu = (raw.TinhTrangVatTu || '').trim();
+
+  const isDone = tinhTrangCV.toLowerCase() === 'done';
+  const isMissingMaterial = /thiếu|chờ/i.test(tinhTrangVatTu) && tinhTrangVatTu !== '' && !/đủ|có sẵn|xong/i.test(tinhTrangVatTu);
+  const isOverdue = !isDone && hanHoanThanh && hanHoanThanh < today;
+
+  let statusKey, statusLabel;
+  if(isDone){ statusKey='done'; statusLabel='Hoàn thành'; }
+  else if(isOverdue){ statusKey='overdue'; statusLabel='Quá hạn'; }
+  else if(isMissingMaterial){ statusKey='waiting'; statusLabel='Chờ vật tư'; }
+  else { statusKey='progress'; statusLabel='Đang làm'; }
+
+  const daysOpen = ngayPhatSinh ? daysBetween(today, ngayPhatSinh) : null;
+
+  return {
+    ...raw,
+    ngayPhatSinhDate: ngayPhatSinh,
+    hanHoanThanhDate: hanHoanThanh,
+    statusKey, statusLabel,
+    daysOpen
+  };
+}
+
+/* ------------------ FILTER STATE ------------------ */
+const filters = {
+  todo: { search:'', status:'all', dept:'all', sort:'days_desc' },
+  history: { search:'', dept:'all', sort:'recent' }
+};
+
+function populateDeptFilters(){
+  const depts = [...new Set(STATE.items.map(i => i.BoPhanYeuCau).filter(Boolean))].sort();
+  ['deptFilterTodo','deptFilterHistory'].forEach(id=>{
+    const sel = document.getElementById(id);
+    const current = sel.value;
+    sel.innerHTML = '<option value="all">Tất cả bộ phận</option>' +
+      depts.map(d=>`<option value="${escapeHtml(d)}">${escapeHtml(d)}</option>`).join('');
+    sel.value = depts.includes(current) ? current : 'all';
+  });
+}
+
+function escapeHtml(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function fmtDate(d){
+  if(!d) return '—';
+  return d.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit', year:'numeric'});
+}
+
+/* ------------------ RENDER: TODO SCREEN ------------------ */
+function renderAll(){
+  renderKpiStrip();
+  renderTodoList();
+  renderReport();
+  renderHistory();
+}
+
+function renderKpiStrip(){
+  const active = STATE.items.filter(i => i.statusKey !== 'done');
+  const overdue = active.filter(i => i.statusKey === 'overdue').length;
+  const waiting = active.filter(i => i.statusKey === 'waiting').length;
+  const progress = active.filter(i => i.statusKey === 'progress').length;
+
+  document.getElementById('kpiStrip').innerHTML = `
+    <div class="kpi-chip k-total"><div class="num">${active.length}</div><div class="lbl">Việc cần làm</div></div>
+    <div class="kpi-chip k-overdue"><div class="num">${overdue}</div><div class="lbl">Quá hạn</div></div>
+    <div class="kpi-chip k-waiting"><div class="num">${waiting}</div><div class="lbl">Chờ vật tư</div></div>
+    <div class="kpi-chip k-progress"><div class="num">${progress}</div><div class="lbl">Đang làm</div></div>
+  `;
+
+  const badge = document.getElementById('badgeTodo');
+  if(overdue > 0){ badge.style.display='flex'; badge.textContent = overdue > 99 ? '99+' : overdue; }
+  else badge.style.display = 'none';
+}
+
+function getFilteredTodo(){
+  const f = filters.todo;
+  let list = STATE.items.filter(i => i.statusKey !== 'done');
+  if(f.status !== 'all') list = list.filter(i => i.statusKey === f.status);
+  if(f.dept !== 'all') list = list.filter(i => i.BoPhanYeuCau === f.dept);
+  if(f.search){
+    const q = f.search.toLowerCase();
+    list = list.filter(i =>
+      (i.NoiDungCongViec||'').toLowerCase().includes(q) ||
+      (i.NguoiYeuCau||'').toLowerCase().includes(q) ||
+      (i.BoPhanYeuCau||'').toLowerCase().includes(q)
+    );
+  }
+  list.sort((a,b)=>{
+    if(f.sort==='days_desc') return (b.daysOpen ?? -1) - (a.daysOpen ?? -1);
+    if(f.sort==='due_asc') return (a.hanHoanThanhDate?.getTime() ?? Infinity) - (b.hanHoanThanhDate?.getTime() ?? Infinity);
+    if(f.sort==='new_first') return (b.ngayPhatSinhDate?.getTime() ?? 0) - (a.ngayPhatSinhDate?.getTime() ?? 0);
+    return 0;
+  });
+  return list;
+}
+
+function jobCardHtml(item){
+  return `
+  <div class="job-card st-${item.statusKey}">
+    <div class="top-row">
+      <div class="title">${escapeHtml(item.NoiDungCongViec || '(Không có nội dung)')}</div>
+      <span class="status-pill st-${item.statusKey}">${item.statusLabel}</span>
+    </div>
+    <div class="meta-line">
+      <span><i class="bi bi-person"></i>${escapeHtml(item.NguoiYeuCau || '—')}</span>
+      <span><i class="bi bi-calendar-plus"></i>Phát sinh: ${fmtDate(item.ngayPhatSinhDate)}</span>
+      <span><i class="bi bi-calendar-check"></i>Hạn: ${fmtDate(item.hanHoanThanhDate)}</span>
+      ${item.TinhTrangVatTu ? `<span><i class="bi bi-box-seam"></i>${escapeHtml(item.TinhTrangVatTu)}</span>` : ''}
+    </div>
+    <div class="foot-row">
+      <span class="dept-tag">${escapeHtml(item.BoPhanYeuCau || 'Chưa rõ bộ phận')}</span>
+      ${item.daysOpen !== null ? `<span class="days-tag ${item.statusKey==='overdue'?'overdue':'normal'}">Tồn ${item.daysOpen} ngày</span>` : ''}
+    </div>
+  </div>`;
+}
+
+function renderTodoList(){
+  const list = getFilteredTodo();
+  const el = document.getElementById('todoList');
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state"><i class="bi bi-emoji-smile"></i><p class="mt-2 mb-0">Không có công việc phù hợp bộ lọc.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(jobCardHtml).join('');
+}
+
+/* ------------------ RENDER: REPORT SCREEN ------------------ */
+function renderReport(){
+  const items = STATE.items;
+  const total = items.length;
+  const done = items.filter(i=>i.statusKey==='done').length;
+  const overdue = items.filter(i=>i.statusKey==='overdue').length;
+  const rate = total ? Math.round((done/total)*100) : 0;
+
+  document.getElementById('reportKpi').innerHTML = `
+    <div class="kpi-box"><div class="num">${total}</div><div class="lbl">Tổng công việc</div></div>
+    <div class="kpi-box"><div class="num" style="color:var(--done)">${done}</div><div class="lbl">Đã hoàn thành</div></div>
+    <div class="kpi-box"><div class="num" style="color:var(--brand)">${rate}%</div><div class="lbl">Tỷ lệ hoàn thành</div></div>
+    <div class="kpi-box"><div class="num" style="color:var(--overdue)">${overdue}</div><div class="lbl">Đang quá hạn</div></div>
+  `;
+
+  const counts = {
+    done: items.filter(i=>i.statusKey==='done').length,
+    progress: items.filter(i=>i.statusKey==='progress').length,
+    waiting: items.filter(i=>i.statusKey==='waiting').length,
+    overdue: items.filter(i=>i.statusKey==='overdue').length
+  };
+  drawStatusChart(counts);
+
+  const deptMap = {};
+  items.forEach(i=>{
+    const d = i.BoPhanYeuCau || 'Chưa rõ';
+    deptMap[d] = (deptMap[d]||0) + 1;
+  });
+  drawDeptChart(deptMap);
+
+  const top = items.filter(i=>i.statusKey!=='done' && i.daysOpen !== null)
+    .sort((a,b)=>b.daysOpen - a.daysOpen).slice(0,5);
+  document.getElementById('topOverdueList').innerHTML = top.length ? top.map((item,idx)=>`
+    <div class="top-item">
+      <div class="rank">${idx+1}</div>
+      <div class="info">
+        <div class="t">${escapeHtml(item.NoiDungCongViec)}</div>
+        <div class="d">${escapeHtml(item.BoPhanYeuCau || '—')} · ${item.statusLabel}</div>
+      </div>
+      <div class="days">${item.daysOpen} ngày</div>
+    </div>
+  `).join('') : `<div class="empty-state"><i class="bi bi-check2-circle"></i><p class="mt-2 mb-0">Không có việc tồn đọng lâu.</p></div>`;
+}
+
+function drawStatusChart(counts){
+  const ctx = document.getElementById('chartStatus');
+  if(charts.status) charts.status.destroy();
+  charts.status = new Chart(ctx, {
+    type: 'doughnut',
+    data:{
+      labels:['Hoàn thành','Đang làm','Chờ vật tư','Quá hạn'],
+      datasets:[{
+        data:[counts.done, counts.progress, counts.waiting, counts.overdue],
+        backgroundColor:['#2F9E44','#1971C2','#E8A400','#E03131'],
+        borderWidth:0
+      }]
+    },
+    options:{
+      maintainAspectRatio:false,
+      cutout:'62%',
+      plugins:{ legend:{ position:'bottom', labels:{ boxWidth:10, font:{ family:"'Be Vietnam Pro'", size:11 } } } }
+    }
+  });
+}
+
+function drawDeptChart(deptMap){
+  const labels = Object.keys(deptMap);
+  const data = Object.values(deptMap);
+  const ctx = document.getElementById('chartDept');
+  if(charts.dept) charts.dept.destroy();
+  charts.dept = new Chart(ctx, {
+    type:'bar',
+    data:{ labels, datasets:[{ data, backgroundColor:'#0F4C5C', borderRadius:6, maxBarThickness:28 }] },
+    options:{
+      indexAxis:'y',
+      maintainAspectRatio:false,
+      plugins:{ legend:{ display:false } },
+      scales:{ x:{ beginAtZero:true, ticks:{ precision:0 } }, y:{ ticks:{ font:{ family:"'Be Vietnam Pro'", size:11 } } } }
+    }
+  });
+}
+
+/* ------------------ RENDER: HISTORY SCREEN ------------------ */
+function getFilteredHistory(){
+  const f = filters.history;
+  let list = STATE.items.filter(i => i.statusKey === 'done');
+  if(f.dept !== 'all') list = list.filter(i => i.BoPhanYeuCau === f.dept);
+  if(f.search){
+    const q = f.search.toLowerCase();
+    list = list.filter(i =>
+      (i.NoiDungCongViec||'').toLowerCase().includes(q) ||
+      (i.NguoiYeuCau||'').toLowerCase().includes(q)
+    );
+  }
+  list.sort((a,b)=>{
+    const at = a.hanHoanThanhDate?.getTime() ?? 0;
+    const bt = b.hanHoanThanhDate?.getTime() ?? 0;
+    return f.sort === 'recent' ? bt - at : at - bt;
+  });
+  return list;
+}
+
+function renderHistory(){
+  const list = getFilteredHistory();
+  const el = document.getElementById('historyList');
+  if(list.length === 0){
+    el.innerHTML = `<div class="empty-state"><i class="bi bi-inboxes"></i><p class="mt-2 mb-0">Chưa có công việc nào hoàn thành.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(item => `
+    <div class="tl-item">
+      <div class="tl-dot"></div>
+      <div class="tl-content">
+        <div class="t">${escapeHtml(item.NoiDungCongViec)}</div>
+        <div class="meta">
+          <span><i class="bi bi-person"></i> ${escapeHtml(item.NguoiYeuCau || '—')}</span>
+          <span><i class="bi bi-building"></i> ${escapeHtml(item.BoPhanYeuCau || '—')}</span>
+          <span><i class="bi bi-calendar-check"></i> Hoàn thành: ${fmtDate(item.hanHoanThanhDate)}</span>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+/* ------------------ TAB SWITCHING ------------------ */
+function switchTab(tab){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.querySelectorAll('#topTabs button').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+document.querySelectorAll('.nav-btn, #topTabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=> switchTab(btn.dataset.tab));
+});
+
+/* ------------------ FILTER EVENT WIRING ------------------ */
+document.getElementById('searchTodo').addEventListener('input', e=>{
+  filters.todo.search = e.target.value; renderTodoList();
+});
+document.getElementById('deptFilterTodo').addEventListener('change', e=>{
+  filters.todo.dept = e.target.value; renderTodoList();
+});
+document.getElementById('sortTodo').addEventListener('change', e=>{
+  filters.todo.sort = e.target.value; renderTodoList();
+});
+document.querySelectorAll('#statusFilterRow .chip-toggle').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('#statusFilterRow .chip-toggle').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    filters.todo.status = btn.dataset.status;
+    renderTodoList();
+  });
+});
+
+document.getElementById('searchHistory').addEventListener('input', e=>{
+  filters.history.search = e.target.value; renderHistory();
+});
+document.getElementById('deptFilterHistory').addEventListener('change', e=>{
+  filters.history.dept = e.target.value; renderHistory();
+});
+document.getElementById('sortHistory').addEventListener('change', e=>{
+  filters.history.sort = e.target.value; renderHistory();
+});
+
+document.getElementById('btnSync').addEventListener('click', ()=> fetchData(true));
+
+/* ------------------ INIT ------------------ */
+fetchData(true);
+setInterval(()=> fetchData(false), CONFIG.REFRESH_MS);
+</script>
+</body>
+</html>
